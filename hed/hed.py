@@ -12,8 +12,11 @@ from tensorpack import *
 from tensorpack.tfutils.symbolic_functions import *
 from tensorpack.tfutils.summary import *
 from idcard_dataset import IdCard
+from pennfudanped_dataset import PennFudanPed
+
 
 DATA_DIR = '../data/'
+DATASET = None
 
 
 class Model(ModelDesc):
@@ -99,7 +102,7 @@ class Model(ModelDesc):
 
 def get_data(name):
     isTrain = name == 'train'
-    ds = IdCard('val', DATA_DIR)
+    ds = DATASET('val', DATA_DIR)
 
     class CropMultiple16(imgaug.ImageAugmentor):
 
@@ -215,12 +218,21 @@ def run(model_path, image_path, output):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', help='choose dataset; available options: "idcard", "pennfudanped"', required=True)
     parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     args = parser.parse_args()
+
+    if args.dataset == 'idcard':
+        DATASET = IdCard
+    elif args.dataset == 'pennfudanped':
+        DATASET = PennFudanPed
+    else:
+        raise ValueError('unknown dataset name: {}'.format(args.dataset))
+
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
