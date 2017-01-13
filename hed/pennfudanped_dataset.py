@@ -9,7 +9,7 @@ import cv2
 from scipy.misc import imresize
 
 
-IMG_H, IMG_W = 581, 1017    # use the maximum width/height
+IMG_H, IMG_W = 256, 256    # force scale to 256x256
 
 
 def copyMakeBorderWithRandomNoise(src, top, bottom, left, right):
@@ -55,12 +55,8 @@ class PennFudanPed(DataFlow):
 
             im = cv2.imread(raw_file, cv2.IMREAD_COLOR)
             assert im is not None
-            assert im.shape[0] <= IMG_H and im.shape[1] <= IMG_W, 'raw image {} is too large: {}x{}'.format(raw_name, im.shape[0], im.shape[1])
-
             gt = cv2.imread(gt_file, cv2.IMREAD_COLOR)
             assert gt is not None
-            assert gt.shape[0] <= IMG_H and gt.shape[1] <= IMG_W, 'gt image {} is too large: {}x{}'.format(gt_name, gt.shape[0], gt.shape[1])
-
             assert gt.shape == im.shape, 'shape mismatch: {}, {} != {}'.format(gt_name, gt.shape, im.shape)
 
             k = min(1.0 * IMG_H / im.shape[0], 1.0 * IMG_W / im.shape[1])
