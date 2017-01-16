@@ -195,18 +195,26 @@ def get_config():
     )
 
 
-def run(model_path, image_path, output):
+def generate(model_path):
     pred_config = PredictConfig(
         model=Model(),
         session_init=get_model_loader(model_path),
         input_names=['image'],
         output_names=['output' + str(k) for k in range(1, 3)])
     predict_func = get_predict_func(pred_config)
-    im = cv2.imread(image_path)
-    assert im is not None
-    im = cv2.resize(im, (im.shape[1] // 16 * 16, im.shape[0] // 16 * 16))
-    outputs = predict_func([[im.astype('float32')]])
-    cv2.imwrite('out.png', outputs[0][0] * 255)
+    while True:
+        im = yield
+        assert im is not None
+        im = cv2.resize(im, (im.shape[1] // 16 * 16, im.shape[0] // 16 * 16))
+        outputs = predict_func([[im.astype('float32')]])
+        yield outputs[0][0]
+
+
+def run(model_path, image_path, output):
+    generator = generate(model_path)
+    generator.next()
+    cv2.imwrite('out.png', generator.send(cv2.imread(image_path)) * 255)
+    generator.close()
 
 
 if __name__ == '__main__':
