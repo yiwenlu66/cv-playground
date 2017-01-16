@@ -70,11 +70,11 @@ class Model(ModelDesc):
             b5 = branch('branch5', l, 16)
 
         final_map = Conv2D('convfcweight',
-                           tf.concat_v2([b1, b2, b3, b4, b5], 3), 1, 1,
+                           tf.concat_v2([b5], 3), 1, 1,
                            W_init=tf.constant_initializer(0.2),
                            use_bias=False, nl=tf.identity)
         costs = []
-        for idx, b in enumerate([b1, b2, b3, b4, b5, final_map]):
+        for idx, b in enumerate([b5, final_map]):
             output = tf.nn.sigmoid(b, name='output{}'.format(idx + 1))
             xentropy = class_balanced_sigmoid_cross_entropy(
                 b, heatmap,
@@ -200,20 +200,13 @@ def run(model_path, image_path, output):
         model=Model(),
         session_init=get_model_loader(model_path),
         input_names=['image'],
-        output_names=['output' + str(k) for k in range(1, 7)])
+        output_names=['output' + str(k) for k in range(1, 3)])
     predict_func = get_predict_func(pred_config)
     im = cv2.imread(image_path)
     assert im is not None
     im = cv2.resize(im, (im.shape[1] // 16 * 16, im.shape[0] // 16 * 16))
     outputs = predict_func([[im.astype('float32')]])
-    if output is None:
-        for k in range(6):
-            pred = outputs[k][0]
-            cv2.imwrite("out{}.png".format(
-                '-fused' if k == 5 else str(k + 1)), pred * 255)
-    else:
-        pred = outputs[5][0]
-        cv2.imwrite(output, pred * 255)
+    cv2.imwrite('out.png', outputs[0][0] * 255)
 
 
 if __name__ == '__main__':
